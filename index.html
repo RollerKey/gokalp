@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5N1K Dil Terapisi Uygulaması</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress {
+            background: #e2e8f0;
+            height: 10px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .question-area {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .question {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 15px;
+            border-left: 5px solid #4299e1;
+        }
+
+        .voice-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .mic-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            font-size: 3em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 24px rgba(255, 107, 107, 0.4);
+        }
+
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+
+        .mic-button.listening {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-button.processing {
+            background: linear-gradient(45deg, #ffd93d, #ff9500);
+        }
+
+        .status-text {
+            font-size: 1.2em;
+            color: #4a5568;
+            font-weight: bold;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .audio-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .audio-btn:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .audio-btn:active {
+            transform: scale(0.95);
+        }
+
+        .voice-result {
+            background: #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 1.1em;
+            color: #2d3748;
+            min-height: 20px;
+        }
+
+        .answers {
+            display: none;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .answers.show {
+            display: flex;
+        }
+
+        .answer-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            border: 3px solid #cbd5e0;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .answer-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .answer-btn.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+            animation: correctPulse 0.6s ease;
+        }
+
+        .answer-btn.wrong {
+            border-color: #f56565;
+            background: #fff5f5;
+            animation: wrongShake 0.6s ease;
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .answer-image {
+            font-size: 4em;
+            line-height: 1;
+        }
+
+        .feedback {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            font-size: 3em;
+            font-weight: bold;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .feedback.show {
+            opacity: 1;
+        }
+
+        .feedback.correct {
+            background: rgba(72, 187, 120, 0.9);
+            color: white;
+        }
+
+        .feedback.wrong {
+            background: rgba(245, 101, 101, 0.9);
+            color: white;
+        }
+
+        .falling-potatoes {
+            position: absolute;
+            top: -50px;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .potato {
+            position: absolute;
+            font-size: 2em;
+            animation: fall 2s linear;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .completion {
+            text-align: center;
+            display: none;
+        }
+
+        .completion.show {
+            display: block;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .restart-btn:active {
+            transform: scale(0.95);
+        }
+
+        .permission-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .permission-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .permission-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .permission-btn:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .loading {
+            text-align: center;
+            color: #4a5568;
+            font-size: 1.2em;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 8px 16px rgba(72, 187, 120, 0.3);
+            }
+            50% { 
+                transform: scale(1.1); 
+                box-shadow: 0 12px 24px rgba(72, 187, 120, 0.5);
+            }
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fall {
+            from {
+                top: -50px;
+                transform: rotate(0deg);
+            }
+            to {
+                top: 100%;
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-area.new-question {
+            animation: slideInFromTop 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="permission-modal" id="permissionModal">
+        <div class="permission-content">
+            <h2>🎤 Mikrofon İzni</h2>
+            <p>Bu uygulama sesli cevaplarınızı algılayabilmek için mikrofon iznine ihtiyaç duyar.</p>
+            <button class="permission-btn" onclick="requestMicrophonePermission()">İzin Ver</button>
+            <button class="permission-btn" onclick="skipPermission()" style="background: #718096;">Geç</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🎯 5N1K Sesli Öğreniyorum</h1>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="correctCount">0</div>
+                <div class="stat-label">Doğru</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="wrongCount">0</div>
+                <div class="stat-label">Yanlış</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="currentQuestion">1</div>
+                <div class="stat-label">Soru</div>
+            </div>
+        </div>
+
+        <div class="question-area" id="questionArea">
+            <div class="loading" id="loading">Sorular hazırlanıyor...</div>
+            <div class="question" id="questionText" style="display: none;"></div>
+            
+            <div class="audio-controls" id="audioControls" style="display: none;">
+                <button class="audio-btn" id="playBtn">🔊 Dinle</button>
+                <button class="audio-btn" id="replayBtn">🔄 Tekrar Dinle</button>
+            </div>
+
+            <div class="voice-controls" id="voiceControls" style="display: none;">
+                <button class="mic-button" id="micButton">🎤</button>
+                <div class="status-text" id="statusText">Mikrofona tıklayarak cevabınızı söyleyiniz</div>
+                <div class="voice-result" id="voiceResult"></div>
+            </div>
+            
+            <div class="answers" id="answersContainer"></div>
+        </div>
+
+        <div class="completion" id="completion">
+            <h2>🎉 Tebrikler! Tüm soruları tamamladın!</h2>
+            <p>Doğru cevap sayın: <span id="finalScore"></span>/20</p>
+            <button class="restart-btn" onclick="restartGame()">🔄 Tekrar Başla</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+        <div class="falling-potatoes" id="fallingPotatoes"></div>
+    </div>
+
+    <script>
+        console.log('Uygulama başlıyor...');
+
+        const questions = [
+            {
+                question: "Köpek ne yer?",
+                correctAnswers: ["et", "köpek maması", "mama", "kemik"],
+                wrongAnswers: ["çiçek", "yaprak"],
+                images: ["🥩", "🌸"]
+            },
+            {
+                question: "Kuş nerede yaşar?",
+                correctAnswers: ["yuva", "yuvada", "ağaç", "ağaçta", "dal", "dalda"],
+                wrongAnswers: ["su", "suda"],
+                images: ["🏠", "💧"]
+            },
+            {
+                question: "Çocuklar ne zaman okula gider?",
+                correctAnswers: ["sabah", "sabahleyin", "güne"],
+                wrongAnswers: ["gece", "akşam"],
+                images: ["☀️", "🌙"]
+            },
+            {
+                question: "Kim doktora gider?",
+                correctAnswers: ["hasta", "hasta olan", "hastalar"],
+                wrongAnswers: ["mutlu", "sağlam"],
+                images: ["🤒", "😊"]
+            },
+            {
+                question: "Kalem ne ile yazılır?",
+                correctAnswers: ["mürekkep", "mürekkeple", "kalem ucu", "uç"],
+                wrongAnswers: ["su", "suyla"],
+                images: ["✏️", "💧"]
+            },
+            {
+                question: "Balık nereye yüzer?",
+                correctAnswers: ["deniz", "denize", "su", "suya", "göl", "göle"],
+                wrongAnswers: ["gökyüzü", "hava"],
+                images: ["🌊", "☁️"]
+            },
+            {
+                question: "Araba ne yapar?",
+                correctAnswers: ["gider", "hareket eder", "koşar", "yürür"],
+                wrongAnswers: ["uçar", "uçmak"],
+                images: ["🚗", "✈️"]
+            },
+            {
+                question: "Yemek ne zaman yenir?",
+                correctAnswers: ["aç olunca", "açken", "yemek saati"],
+                wrongAnswers: ["tok", "tokken"],
+                images: ["🍽️", "😋"]
+            },
+            {
+                question: "Kim ders verir?",
+                correctAnswers: ["öğretmen", "öğretmenler", "hoca"],
+                wrongAnswers: ["öğrenci", "öğrenciler"],
+                images: ["👩‍🏫", "👨‍🎓"]
+            },
+            {
+                question: "Kitap ne ile okunur?",
+                correctAnswers: ["göz", "gözle", "gözler", "göz ile"],
+                wrongAnswers: ["kulak", "kulakla"],
+                images: ["👁️", "👂"]
+            },
+            {
+                question: "Çiçek nerede büyür?",
+                correctAnswers: ["toprak", "toprakta", "bahçe", "bahçede"],
+                wrongAnswers: ["hava", "havada"],
+                images: ["🌱", "☁️"]
+            },
+            {
+                question: "Uyku ne zaman uyunur?",
+                correctAnswers: ["gece", "akşam", "geceleri"],
+                wrongAnswers: ["öğlen", "sabah"],
+                images: ["🌙", "☀️"]
+            },
+            {
+                question: "Kim hasta bakar?",
+                correctAnswers: ["doktor", "doktorlar", "hemşire"],
+                wrongAnswers: ["aşçı", "aşçılar"],
+                images: ["👨‍⚕️", "👨‍🍳"]
+            },
+            {
+                question: "Top ne ile atılır?",
+                correctAnswers: ["el", "elle", "el ile", "eller"],
+                wrongAnswers: ["ayak", "ayakla"],
+                images: ["✋", "👟"]
+            },
+            {
+                question: "Kuş nereye uçar?",
+                correctAnswers: ["gökyüzü", "gökyüzüne", "hava", "havaya"],
+                wrongAnswers: ["toprak", "toprağa"],
+                images: ["☁️", "🌱"]
+            },
+            {
+                question: "Yemek ne zaman pişer?",
+                correctAnswers: ["ateş", "ateşte", "ocak", "ocakta"],
+                wrongAnswers: ["buz", "buzda"],
+                images: ["🔥", "🧊"]
+            },
+            {
+                question: "Kim ev yapar?",
+                correctAnswers: ["inşaatçı", "işçi", "usta", "yapımcı"],
+                wrongAnswers: ["berber", "kuaför"],
+                images: ["👷", "✂️"]
+            },
+            {
+                question: "Su ne ile içilir?",
+                correctAnswers: ["bardak", "bardakla", "bardak ile", "kap"],
+                wrongAnswers: ["kaşık", "kaşıkla"],
+                images: ["🥤", "🥄"]
+            },
+            {
+                question: "Güneş nerede doğar?",
+                correctAnswers: ["doğu", "doğuda", "doğu taraf"],
+                wrongAnswers: ["batı", "batıda"],
+                images: ["🌅", "🌇"]
+            },
+            {
+                question: "Kim hasta olur?",
+                correctAnswers: ["insan", "insanlar", "canlı"],
+                wrongAnswers: ["taş", "taşlar"],
+                images: ["🤒", "🪨"]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let gameFinished = false;
+        let speechSupported = false;
+        let microphoneSupported = false;
+        let recognition = null;
+        let currentQuestion = null;
+        let voiceAttempted = false;
+
+        // Mikrofon izni kontrolü
+        async function requestMicrophonePermission() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+                microphoneSupported = true;
+                document.getElementById('permissionModal').style.display = 'none';
+                initializeSpeechRecognition();
+            } catch (error) {
+                console.error('Mikrofon izni reddedildi:', error);
+                alert('Mikrofon izni verilmedi. Uygulama sadece seçenekli modda çalışacak.');
+                skipPermission();
+            }
+        }
+
+        function skipPermission() {
+            microphoneSupported = false;
+            document.getElementById('permissionModal').style.display = 'none';
+            initializeGame();
+        }
+
+        // Ses tanıma başlatma
+        function initializeSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                
+                recognition.lang = 'tr-TR';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = function() {
+                    console.log('Ses tanıma başladı');
+                    document.getElementById('micButton').classList.add('listening');
+                    document.getElementById('statusText').innerHTML = '🎤 Dinliyorum... Cevabınızı söyleyiniz';
+                };
+
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                    console.log('Algılanan ses:', transcript);
+                    document.getElementById('voiceResult').textContent = `Söylediğiniz: "${transcript}"`;
+                    processVoiceAnswer(transcript);
+                };
+
+                recognition.onerror = function(event) {
+                    console.error('Ses tanıma hatası:', event.error);
+                    document.getElementById('micButton').classList.remove('listening', 'processing');
+                    document.getElementById('statusText').innerHTML = '❌ Ses algılanamadı. Tekrar deneyin veya seçenekleri kullanın.';
+                    showAnswerOptions();
+                };
+
+                recognition.onend = function() {
+                    console.log('Ses tanıma bitti');
+                    document.getElementById('micButton').classList.remove('listening');
+                };
+            }
+            
+            initializeGame();
+        }
+
+        // Ses kontrolü
+        function checkSpeechSupport() {
+            if ('speechSynthesis' in window) {
+                speechSupported = true;
+                console.log('Speech API destekleniyor');
+                
+                const loadVoices = () => {
+                    const voices = window.speechSynthesis.getVoices();
+                    console.log('Mevcut sesler:', voices.length);
+                };
+
+                if (window.speechSynthesis.getVoices().length > 0) {
+                    loadVoices();
+                } else {
+                    window.speechSynthesis.onvoiceschanged = loadVoices;
+                }
+            } else {
+                console.log('Speech API desteklenmiyor');
+                speechSupported = false;
+            }
+        }
+
+        function initializeGame() {
+            console.log('Oyun başlatılıyor...');
+            checkSpeechSupport();
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('questionText').style.display = 'block';
+            document.getElementById('audioControls').style.display = 'flex';
+            
+            if (microphoneSupported) {
+                document.getElementById('voiceControls').style.display = 'flex';
+            }
+            
+            loadQuestion();
+        }
+
+        function speakQuestion(text) {
+            if (!speechSupported) {
+                console.log('Ses desteklenmiyor');
+                return;
+            }
+
+            try {
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'tr-TR';
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+                utterance.volume = 0.9;
+                
+                const voices = window.speechSynthesis.getVoices();
+                const turkishVoice = voices.find(voice => 
+                    voice.lang.includes('tr') || 
+                    voice.name.toLowerCase().includes('turkish') ||
+                    voice.name.toLowerCase().includes('türk')
+                );
+                
+                if (turkishVoice) {
+                    utterance.voice = turkishVoice;
+                    console.log('Türkçe ses bulundu:', turkishVoice.name);
+                }
+                
+                utterance.onstart = () => console.log('Konuşma başladı');
+                utterance.onend = () => console.log('Konuşma bitti');
+                utterance.onerror = (e) => console.log('Konuşma hatası:', e);
+                
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('Ses çalma hatası:', error);
+            }
+        }
+
+        function loadQuestion() {
+            console.log('Soru yükleniyor:', currentQuestionIndex + 1);
+            
+            if (currentQuestionIndex >= questions.length) {
+                showCompletion();
+                return;
+            }
+
+            currentQuestion = questions[currentQuestionIndex];
+            voiceAttempted = false;
+            
+            document.getElementById('questionText').textContent = currentQuestion.question;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            
+            // Progress bar güncelle
+            const progress = (currentQuestionIndex / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            // Önceki cevap seçeneklerini gizle
+            document.getElementById('answersContainer').classList.remove('show');
+            document.getElementById('voiceResult').textContent = '';
+            
+            if (microphoneSupported) {
+                document.getElementById('statusText').innerHTML = 'Mikrofona tıklayarak cevabınızı söyleyiniz';
+                document.getElementById('micButton').classList.remove('listening', 'processing');
+            }
+
+            // Animasyon ekle
+            const questionArea = document.getElementById('questionArea');
+            questionArea.classList.add('new-question');
+            setTimeout(() => {
+                questionArea.classList.remove('new-question');
+            }, 500);
+            
+            // Soruyu seslendir (1 saniye sonra)
+            setTimeout(() => {
+                speakQuestion(currentQuestion.question);
+            }, 1000);
+        }
+
+        // Sesli cevabı işle
+        function processVoiceAnswer(transcript) {
+            document.getElementById('micButton').classList.remove('listening');
+            document.getElementById('micButton').classList.add('processing');
+            document.getElementById('statusText').innerHTML = '🔄 Cevabınız kontrol ediliyor...';
+            
+            // Cevabı kontrol et
+            const isCorrect = currentQuestion.correctAnswers.some(answer => 
+                transcript.includes(answer.toLowerCase()) || 
+                answer.toLowerCase().includes(transcript)
+            );
+            
+            setTimeout(() => {
+                document.getElementById('micButton').classList.remove('processing');
+                
+                if (isCorrect) {
+                    correctAnswers++;
+                    document.getElementById('correctCount').textContent = correctAnswers;
+                    showFeedback(true);
+                    createFallingPotatoes();
+                    
+                    setTimeout(() => {
+                        currentQuestionIndex++;
+                        loadQuestion();
+                    }, 2500);
+                } else {
+                    // Yanlış cevap - seçenekleri göster
+                    document.getElementById('statusText').innerHTML = '❌ Yanlış cevap! Seçeneklerden birini seçiniz:';
+                    voiceAttempted = true;
+                    showAnswerOptions();
+                }
+            }, 1000);
+        }
+
+        // Cevap seçeneklerini göster
+        function showAnswerOptions() {
+            const answersContainer = document.getElementById('answersContainer');
+            answersContainer.innerHTML = '';
+            
+            // Doğru ve yanlış cevapları karıştır
+            const allAnswers = [
+                { text: currentQuestion.correctAnswers[0], correct: true, image: currentQuestion.images[0] },
+                { text: currentQuestion.wrongAnswers[0], correct: false, image: currentQuestion.images[1] }
+            ];
+            
+            // Karıştır
+            for (let i = allAnswers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
+            }
+            
+            allAnswers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.innerHTML = `
+                    <div class="answer-image">${answer.image}</div>
+                    <div>${answer.text}</div>
+                `;
+                
+                button.addEventListener('click', function() {
+                    selectAnswer(answer.correct);
+                });
+                
+                answersContainer.appendChild(button);
+            });
+            
+            answersContainer.classList.add('show');
+        }
+
+        function selectAnswer(isCorrect) {
+            const buttons = document.querySelectorAll('.answer-btn');
+            
+            // Tüm butonları devre dışı bırak
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
+            });
+            
+            if (isCorrect) {
+                correctAnswers++;
+                document.getElementById('correctCount').textContent = correctAnswers;
+                showFeedback(true);
+                createFallingPotatoes();
+            } else {
+                wrongAnswers++;
+                document.getElementById('wrongCount').textContent = wrongAnswers;
+                showFeedback(false);
+            }
+            
+            // 2.5 saniye sonra sonraki soruya geç
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 2500);
+        }
+
+        // Mikrofon butonu tıklama
+        document.addEventListener('DOMContentLoaded', function() {
+            const micButton = document.getElementById('micButton');
+            const playBtn = document.getElementById('playBtn');
+            const replayBtn = document.getElementById('replayBtn');
+            
+            micButton.addEventListener('click', function() {
+                if (!recognition) {
+                    alert('Ses tanıma desteklenmiyor.');
+                    showAnswerOptions();
+                    return;
+                }
+                
+                if (micButton.classList.contains('listening')) {
+                    recognition.stop();
+                    return;
+                }
+                
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Ses tanıma başlatma hatası:', error);
+                    showAnswerOptions();
+                }
+            });
+            
+            playBtn.addEventListener('click', function() {
+                console.log('Ses butonu tıklandı');
+                const questionText = document.getElementById('questionText').textContent;
+                speakQuestion(questionText);
+            });
+
+            replayBtn.addEventListener('click', function() {
+                console.log('Tekrar dinle butonu tıklandı');
+                const questionText = document.getElementById('questionText').textContent;
+                speakQuestion(questionText);
+            });
+        });
+
+        function showFeedback(isCorrect) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = isCorrect ? '✅ Doğru!' : '❌ Yanlış!';
+            feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 2000);
+        }
+
+        function createFallingPotatoes() {
+            const container = document.getElementById('fallingPotatoes');
+            const potatoes = ['🥔', '🍟', '🥔', '🍟', '🥔'];
+            
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const potato = document.createElement('div');
+                    potato.className = 'potato';
+                    potato.textContent = potatoes[Math.floor(Math.random() * potatoes.length)];
+                    potato.style.left = Math.random() * 90 + '%';
+                    potato.style.animationDelay = Math.random() * 0.5 + 's';
+                    container.appendChild(potato);
+                    
+                    setTimeout(() => {
+                        if (container.contains(potato)) {
+                            container.removeChild(potato);
+                        }
+                    }, 2500);
+                }, i * 150);
+            }
+        }
+
+        function showCompletion() {
+            console.log('Oyun tamamlandı!');
+            gameFinished = true;
+            document.getElementById('questionArea').style.display = 'none';
+            document.getElementById('completion').classList.add('show');
+            document.getElementById('finalScore').textContent = correctAnswers;
+            
+            // Progress bar'ı tamamla
+            document.getElementById('progressBar').style.width = '100%';
+        }
+
+        function restartGame() {
+            console.log('Oyun yeniden başlatılıyor...');
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            gameFinished = false;
+            voiceAttempted = false;
+            
+            document.getElementById('correctCount').textContent = '0';
+            document.getElementById('wrongCount').textContent = '0';
+            document.getElementById('questionArea').style.display = 'block';
+            document.getElementById('completion').classList.remove('show');
+            document.getElementById('answersContainer').classList.remove('show');
+            
+            loadQuestion();
+        }
+
+        // Global restart function
+        window.restartGame = restartGame;
+
+        // Touch events için
+        document.addEventListener('touchstart', function() {}, {passive: true});
+        
+        console.log('JavaScript yüklendi');
+    </script>
+</body>
+</html>
